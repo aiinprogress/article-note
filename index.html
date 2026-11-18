@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기사 프로젝트 노트</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&family=Noto+Serif+KR:wght@300;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#faf5ea; --card:#fffdf8; --ink:#3b3330; --sub:#8a7a6e; --line:#e8dfcf;
+    --coral:#e8745a; --amber:#e9a23b; --teal:#3f9a94; --violet:#8a6fc4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    font-family:'Noto Sans KR',sans-serif;font-weight:300;color:var(--ink);
+    background:var(--bg);line-height:1.8;word-break:keep-all;min-height:100vh;
+    position:relative;overflow-x:hidden;
+  }
+  /* 은은하게 움직이는 색 덩어리 */
+  .blob{position:fixed;border-radius:50%;filter:blur(70px);opacity:.28;z-index:0;pointer-events:none;
+    animation:float 18s ease-in-out infinite alternate}
+  .b1{width:300px;height:300px;background:var(--coral);top:-80px;left:-90px}
+  .b2{width:260px;height:260px;background:var(--teal);top:35%;right:-100px;animation-delay:-6s}
+  .b3{width:280px;height:280px;background:var(--amber);bottom:-100px;left:10%;animation-delay:-11s}
+  @keyframes float{to{transform:translate(30px,40px) scale(1.12)}}
+  @media (prefers-reduced-motion:reduce){.blob{animation:none}}
+
+  .wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:56px 20px 80px}
+  .label{font-size:11px;letter-spacing:.35em;color:var(--coral);font-weight:500;margin-bottom:10px}
+  h1{font-family:'Noto Serif KR',serif;font-weight:300;font-size:clamp(26px,7vw,36px);line-height:1.4;margin-bottom:36px}
+  h1 b{font-weight:600}
+  section{margin-bottom:40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px;
+    box-shadow:0 6px 24px rgba(120,90,60,.07)}
+  [contenteditable]{outline:none;min-height:1.8em}
+  [contenteditable]:empty::before{content:attr(data-ph);color:#b9aa9b}
+  [contenteditable]:focus{background:rgba(233,162,59,.1);border-radius:6px}
+
+  .topic{display:inline-block;font-family:'Noto Serif KR',serif;font-weight:600;font-size:20px;
+    padding:6px 20px;border-radius:999px;color:#fff;
+    background:linear-gradient(135deg,var(--coral),var(--amber))}
+
+  ul{list-style:none}
+  li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}
+  li:last-child{border-bottom:0}
+  li input{appearance:none;-webkit-appearance:none;flex:none;width:26px;height:26px;margin-top:2px;
+    border:2px solid var(--teal);border-radius:8px;background:#fff;cursor:pointer;position:relative}
+  li input:checked{background:var(--teal)}
+  li input:checked::after{content:"";position:absolute;left:7px;top:2px;width:6px;height:12px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+  li input:checked + span{text-decoration:line-through;color:var(--sub)}
+  li span{flex:1;font-size:16px;padding-top:1px}
+
+  .log{display:flex;gap:14px;padding:6px 0}
+  .date{flex:none;font-family:'Noto Serif KR',serif;font-weight:600;color:var(--violet);width:52px;padding-top:2px}
+  .log .txt{flex:1;font-size:16px}
+  .add{margin-top:14px;width:100%;padding:13px;border:1px dashed var(--violet);background:transparent;
+    color:var(--violet);border-radius:10px;font:inherit;font-weight:400;font-size:15px;cursor:pointer}
+  .add:active{background:rgba(138,111,196,.1)}
+  footer{text-align:center;font-size:12px;color:var(--sub);margin-top:48px}
+</style>
+</head>
+<body>
+<div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+
+<main class="wrap">
+  <p class="label">PROJECT NOTE</p>
+  <h1>기사 <b>프로젝트 노트</b></h1>
+
+  <section>
+    <p class="label">PROJECT</p>
+    <div class="card"><div contenteditable="true" data-k="brief" data-ph="프로젝트 한 줄을 적어 주세요"></div></div>
+  </section>
+
+  <section>
+    <p class="label">TOPIC</p>
+    <span class="topic">경제</span>
+  </section>
+
+  <section>
+    <p class="label">TO-DO</p>
+    <div class="card"><ul id="todos"></ul></div>
+  </section>
+
+  <section>
+    <p class="label">DAILY LOG</p>
+    <div class="card">
+      <div id="logs"></div>
+      <button class="add" id="addLog" type="button">+ 오늘 기록 추가</button>
+    </div>
+  </section>
+
+  <footer>글을 쓰면 이 기기에 자동으로 저장돼요</footer>
+</main>
+
+<script>
+(function(){
+  var KEY='article-project-note-v1', data={};
+  try{ data=JSON.parse(localStorage.getItem(KEY))||{}; }catch(e){ data={}; }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(data)); }catch(e){} }
+
+  // 프로젝트 한 줄
+  var brief=document.querySelector('[data-k="brief"]');
+  brief.textContent=data.brief||'';
+  brief.addEventListener('input',function(){ data.brief=brief.textContent; save(); });
+
+  // 할 일 5개
+  data.todos=data.todos||[0,1,2,3,4].map(function(){return {t:'',d:false};});
+  var ul=document.getElementById('todos');
+  data.todos.forEach(function(it,i){
+    var li=document.createElement('li');
+    var cb=document.createElement('input'); cb.type='checkbox'; cb.checked=it.d;
+    cb.setAttribute('aria-label','할 일 '+(i+1)+' 완료');
+    var sp=document.createElement('span'); sp.contentEditable='true';
+    sp.setAttribute('data-ph','할 일 '+(i+1)); sp.textContent=it.t;
+    cb.addEventListener('change',function(){ it.d=cb.checked; save(); });
+    sp.addEventListener('input',function(){ it.t=sp.textContent; save(); });
+    li.appendChild(cb); li.appendChild(sp); ul.appendChild(li);
+  });
+
+  // 날짜별 기록 (11/18부터)
+  data.logs=data.logs||[{d:'11/18',t:''}];
+  var box=document.getElementById('logs');
+  function addRow(it,focus){
+    var row=document.createElement('div'); row.className='log';
+    var d=document.createElement('div'); d.className='date'; d.textContent=it.d;
+    var t=document.createElement('div'); t.className='txt'; t.contentEditable='true';
+    t.setAttribute('data-ph','오늘 한 줄'); t.textContent=it.t;
+    t.addEventListener('input',function(){ it.t=t.textContent; save(); });
+    row.appendChild(d); row.appendChild(t); box.appendChild(row);
+    if(focus) t.focus();
+  }
+  data.logs.forEach(function(it){ addRow(it); });
+  document.getElementById('addLog').addEventListener('click',function(){
+    var n=new Date(), d=(n.getMonth()+1)+'/'+n.getDate();
+    var it={d:d,t:''}; data.logs.push(it); save(); addRow(it,true);
+  });
+})();
+</script>
+</body>
+</html>
